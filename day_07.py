@@ -22,26 +22,24 @@ if len(sys.argv) == 1:
 
 real_input = list(fileinput.input())
 
-def operator_add(a, b):
-    return a + b
-def operator_mul(a, b):
-    return a * b
-def operator_concat(a, b):
-    e = math.floor(math.log10(b)) + 1
-    return a * (10**e) + b
-
 def work(inputs, part2=False):
-    all_operators = (operator_add, operator_mul, operator_concat) if part2 else (operator_add, operator_mul)
+    all_operators = (0,1,2) if part2 else (0,1)
 
     def test(operands, operators, target):
         r = operands[0]
         for i, operator in enumerate(operators):
-            r = operator(r, operands[i+1])
+            b = operands[i+1]
+            if operator == 0:
+                r = r + b
+            elif operator == 1:
+                r = r * b
+            else:
+                e = math.floor(math.log10(b)) + 1
+                r = r * (10**e) + b
             if r > target:
                 return False
         return r == target
-
-
+    
     result = 0
     for line in inputs:
         line = line.strip()
@@ -52,11 +50,11 @@ def work(inputs, part2=False):
         target = int(target)
         operands = tuple(map(int, operands.split(" ")))
 
-        for operators in itertools.product(all_operators, repeat=len(operands) - 1):
+        for operators in itertools.product(all_operators, repeat=len(operands)-1):
             if test(operands, operators, target):
                 result += target
                 break
-
+    
     return result
 
 def test_p1():
