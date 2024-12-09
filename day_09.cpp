@@ -114,7 +114,6 @@ static uint64_t work_p2(std::istream &in) {
         size_t data_len = std::get<1>(*data_it);
         int32_t id = std::get<2>(*data_it);
 
-        bool block_moved = false;
         for (auto free_it = free_blocks.begin(); free_it != free_blocks.end(); ++free_it) {
             size_t free_pos = free_it->first;
             size_t free_len = free_it->second;
@@ -129,42 +128,10 @@ static uint64_t work_p2(std::istream &in) {
                     *free_it = std::make_pair(size_t(free_pos + data_len), size_t(free_rem));
                 }
 
-                block_moved = true;
                 break;
             }
-        }
-        if (!block_moved) {
-            continue;
-        }
-
-        // slow insertion of a new free block
-        auto free_it = free_blocks.begin();
-        for (; free_it != free_blocks.end(); ++free_it) {
-            if (free_it->first > data_pos) {
-                free_blocks.insert(free_it, std::make_pair(data_pos, data_len));
+            else if (free_pos > data_pos) {
                 break;
-            }
-        }
-        if (free_it == free_blocks.end()) {
-            free_blocks.insert(free_blocks.end(), std::make_pair(data_pos, data_len));
-        }
-
-        // fuse with previous block
-        if (free_it != free_blocks.begin()) {
-            auto prev_it = std::prev(free_it);
-            if (prev_it->first + prev_it->second == free_it->first) {
-                *prev_it = std::make_pair(prev_it->first, prev_it->second + free_it->second);
-                auto to_delete = free_it;
-                free_it = prev_it;
-                free_blocks.erase(to_delete);
-            }
-        }
-        // and with next block
-        if (free_it != free_blocks.end()) {
-            auto next_it = std::next(free_it);
-            if (free_it->first + free_it->second == next_it->first) {
-                *free_it = std::make_pair(free_it->first, free_it->second + next_it->second);
-                free_blocks.erase(next_it);
             }
         }
     }
