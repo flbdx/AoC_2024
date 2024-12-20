@@ -51,10 +51,14 @@ def work_p1(inputs, threshold=100):
 
     distances = {}
 
+    cheats_by_gain = {}
+    path = set()
+
     p = end
     s = 0
     distances[p] = 0
-    path = [end]
+    path.add(p)
+
     while p != start:
         for d in (1, -1, 1j, -1j):
             np = p + d
@@ -64,24 +68,16 @@ def work_p1(inputs, threshold=100):
                 continue
             s += 1
             distances[np] = s
-            path.append(np)
+            path.add(np)
             p = np
             break
-    
-    path_s = set(path)
-    path = list(reversed(path))
 
-    cheats_by_gain = {}
-    
-    for p in path:
         for d in (1, -1, 1j, -1j):
-            np1 = p + d
-            np2 = p + d + d
-            if np1 in walls and np2 in path_s:
-                delta = distances[p] - distances[np2] - 2
-                if delta > 0:
-                    cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
-    
+            np = p + d + d
+            if np in path:
+                delta = distances[p] - distances[np] - 2
+                cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
+
     ret = 0
     for k, g in cheats_by_gain.items():
         if k >= threshold:
@@ -96,10 +92,14 @@ def work_p2(inputs, threshold=100):
 
     distances = {}
 
+    cheats_by_gain = {}
+    path = set()
+
     p = end
     s = 0
     distances[p] = 0
-    path = [end]
+    path.add(p)
+
     while p != start:
         for d in (1, -1, 1j, -1j):
             np = p + d
@@ -109,26 +109,19 @@ def work_p2(inputs, threshold=100):
                 continue
             s += 1
             distances[np] = s
-            path.append(np)
+            path.add(np)
             p = np
             break
-    
-    path_s = set(path)
-    path = list(reversed(path))
 
-    cheats_by_gain = {}
-
-    for p in path:
         for cheat_len in range(2, 21):
             for x in range(-cheat_len, cheat_len+1):
                 tmp = cheat_len - abs(x)
-                for y in set([- tmp, tmp]):
+                for y in set((-tmp, tmp)):
                     np = p + x + y*1j
-                    if np in path_s:
+                    if np in path:
                         delta = distances[p] - distances[np] - cheat_len
-                        if delta > 0:
-                            cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
-    
+                        cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
+
     ret = 0
     for k, g in cheats_by_gain.items():
         if k >= threshold:
