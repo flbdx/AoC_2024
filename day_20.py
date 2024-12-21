@@ -52,12 +52,10 @@ def work_p1(inputs, threshold=100):
     distances = {}
 
     cheats_by_gain = {}
-    path = set()
 
     p = end
     s = 0
     distances[p] = 0
-    path.add(p)
 
     while p != start:
         for d in (1, -1, 1j, -1j):
@@ -68,15 +66,15 @@ def work_p1(inputs, threshold=100):
                 continue
             s += 1
             distances[np] = s
-            path.add(np)
             p = np
             break
 
         for d in (1, -1, 1j, -1j):
             np = p + d + d
-            if np in path:
+            if np in distances:
                 delta = distances[p] - distances[np] - 2
-                cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
+                if delta != 0:
+                    cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
 
     ret = 0
     for k, g in cheats_by_gain.items():
@@ -93,12 +91,18 @@ def work_p2(inputs, threshold=100):
     distances = {}
 
     cheats_by_gain = {}
-    path = set()
 
     p = end
     s = 0
     distances[p] = 0
-    path.add(p)
+
+    # precalculated offsets for the possible jumps
+    cache_offsets = []
+    for cheat_len in range(2, 21):
+        for x in range(-cheat_len, cheat_len+1):
+            tmp = cheat_len - abs(x)
+            for y in set((-tmp, tmp)):
+                cache_offsets.append((x + y*1j, cheat_len))
 
     while p != start:
         for d in (1, -1, 1j, -1j):
@@ -109,18 +113,15 @@ def work_p2(inputs, threshold=100):
                 continue
             s += 1
             distances[np] = s
-            path.add(np)
             p = np
             break
 
-        for cheat_len in range(2, 21):
-            for x in range(-cheat_len, cheat_len+1):
-                tmp = cheat_len - abs(x)
-                for y in set((-tmp, tmp)):
-                    np = p + x + y*1j
-                    if np in path:
-                        delta = distances[p] - distances[np] - cheat_len
-                        cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
+        for o, cheat_len in cache_offsets:
+            np = p + o
+            if np in distances:
+                delta = distances[p] - distances[np] - cheat_len
+                if delta != 0:
+                    cheats_by_gain[delta] = cheats_by_gain.get(delta, 0) + 1
 
     ret = 0
     for k, g in cheats_by_gain.items():
