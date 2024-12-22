@@ -51,8 +51,9 @@ def work_p1(inputs):
 
 def work_p2(inputs):
 
-    all_first_for_sequence = []
+    all_first_for_sequence = {}
 
+    idx = 0
     for line in inputs:
         line = line.strip()
         if len(line) == 0:
@@ -60,34 +61,27 @@ def work_p2(inputs):
         s = int(line)
         p = Prng(s)
 
-        sequence = list(bytearray(2000+1))
-        sequence[0] = s%10
-        for i in range(2000):
-            sequence[i+1] = p.run_1() % 10
+        sequence = [s%10, p.run_1()%10, p.run_1()%10, p.run_1()%10, p.run_1()%10]
+        diffs = tuple(sequence[i+1] - sequence[i] for i in range(len(sequence) - 1))
+
+        all_first_for_sequence.setdefault(diffs, {}).setdefault(idx, sequence[-1])
         
-        diffs = [sequence[i+1] - sequence[i] for i in range(len(sequence) - 1)]
+        prev = sequence[-1]
+        for _ in range(2000-4):
+            v = p.run_1() % 10
+            diffs = diffs[1:] + (v - prev,)
+            prev = v
+            all_first_for_sequence.setdefault(diffs, {}).setdefault(idx, v)
 
-        first_for_sequence = {}
-        for i in range(len(diffs) - 4):
-            seq = tuple(diffs[i:i+4])
-            v = sequence[i+4]
-            first_for_sequence.setdefault(seq, v)
-
-        all_first_for_sequence.append(first_for_sequence)
-    
-    all_sequences = set()
-    for s in all_first_for_sequence:
-        all_sequences.update(s.keys())
+        idx += 1
     
     best_score = 0
-    for seq in all_sequences:
-        score = sum(l.get(seq, 0) for l in all_first_for_sequence)
+    for seq, d in all_first_for_sequence.items():
+        score = sum(d.values())
         if score > best_score:
             best_score = score
     
     return best_score
-        
-
 
 def test_p1():
     assert(work_p1(test_input_1) == 37327623)
